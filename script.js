@@ -1,66 +1,76 @@
-//객체를 이터러블 프로그래밍으로 다루기.
-const obj1 = {
-  a: 1,
-  b: 2,
-  c: 3,
-  d: 4
-};
+//05. 사용자 정의 객체를 이터러블 프로그래밍으로 다루기
+// Map Set
 
-console.log(Object.values(obj1)); // obj1이라는 객체의 object 값을
-//확인 해주는 함수가 .values임.
+let m = new Map();
+m.set('a', 1);
+m.set('b', 2);
+m.set('c', 3);
 
-L.values = function *(obj) {
-  for (const k in obj) {
-    yield obj[k];
-  }
-};
-
-_.go( // 
-  obj1, // 객체 와  a:1 b:2 
-  //객체는 iterator니까 하나씩 돌아가게됨.
-  L.values,//객체의 값을 체크하고 1 2 3 4
-  L.map(a => a + 10), // 매개변수는 매개변수+10으로 값을 나타내주고
-  L.take(2),//2개를 뽑는다 take를 쓰거나 하면 
-  // c언어 malloc 마냥 동적으로 배열 크기를 할당할 수 있기 떄문에
-  // 더욱 비용이 감소하게 된다.
-  _.reduce((a, b) => a + b),//그리고  두개의 값은 합을 해준다.
-  console.log); //11+12 =23 
-
-
-  //2. entries key value 들이 들어있는 entries를 만드는 방법.
-
-  L.entries = function *(obj) {
-    for (const k in obj) {
-      yield [k, obj[k]]; // 매개변수로 받은 obj 객체 전부를 순회하면서 
-      //그 값들을 entries 객체에 넣는다.
-    }
-  };
-  //이터러블이 아니었던 값을 이터러블로 만들어서 entries =generator 
-  // 뒤에 iterable 하게 값을 뽑아내는 절차를 의미하는거임.
-
-  _.go(
-    obj1,
-    L.entries, // entries 값을 가져오고 
-    L.filter(([_, v]) => v % 2),// _는 사용안하고 v를 받아서 
-    //v%2==true ==1 이니까 값을 받아오는거임.
-    L.map(([k, v]) => ({ [k]: v })),
-    _.reduce(Object.assign),
-    console.log);
-  
-//3 keys
-
-L.keys = function *(obj) {
-  for (const k in obj) {
-    yield k; // key값 만 돌리는 절
-  }
-};
-//entries == generator 
-//  다양한 응용사례 존재 .
 _.go(
-  obj1,
-  L.keys,
-  _.each(console.log)); // 뒤에 키를 모두 확인 하는 절차임.
+  m,
+  _.filter(([k, v]) => v % 2),
+  entries => new Map(entries), // map 이나 set을 이용해서
+  // 만약 key , value 값을 기준으로 거른다음에 v%2 와 같은 것들을 
+  // 거른이후에 그 거른값으로 다시 entries로 만들수도 있음.
+  console.log);
 
+let s = new Set();
+s.add(10);
+s.add(20);
+s.add(30);
+
+// const add = (a, b) => a + b;
+//
+// console.log(_.reduce(add, s));
+
+
+
+
+//2. Model,Collection
+
+class Model {
+  constructor(attrs = {}) {//attrs는 객체임지금.
+    this._attrs = attrs;
+  }
+  get(k) {
+    return this._attrs[k];// value를 return
+  }
+  set(k, v) {
+    this._attrs[k] = v;
+    return this;
+  }
+}
+class Collection {
+  constructor(models = []) {
+    this._models = models;
+  }
+  at(idx) {
+    return this._models[idx];
+  }
+  add(model) {
+    this._models.push(model);
+    return this;
+  }
+  *[Symbol.iterator]() { //* generator로 선언함. 
+    yield *this._models;
+  }
+}
+
+const coll = new Collection();
+coll.add(new Model({ id: 1, name: 'AA' }));
+coll.add(new Model({ id: 3, name: 'BB' }));
+coll.add(new Model({ id: 5, name: 'CC' }));
+console.log(coll.at(2).get('name'));
+console.log(coll.at(1).get('id'));
+
+_.go(
+  coll,
+  L.map(m => m.get('name')),
+  _.each(console.log));
+
+_.go(
+  coll,
+  _.each(m => m.set('name', m.get('name').toLowerCase())));
 
   console.clear();
   
@@ -185,6 +195,6 @@ const users3 = _.go(
   // 해결 해 주는게 맞음.
   L.filter(([_, {age}]) => age < 30),
   L.take(2),
-  object); //ㅇㅇ
+  object);
 
 console.log(users3[19]);
