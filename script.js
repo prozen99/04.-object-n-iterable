@@ -185,6 +185,6 @@ const users3 = _.go(
   // 해결 해 주는게 맞음.
   L.filter(([_, {age}]) => age < 30),
   L.take(2),
-  object);
+  object); //ㅇㅇ
 
 console.log(users3[19]);
